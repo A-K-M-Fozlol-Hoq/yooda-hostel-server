@@ -33,6 +33,7 @@ app.get('/', (req, res) => res.send('Hello World!'));
 client.connect((err) => {
   const userCollection = client.db('yoodaHostel').collection('usersData');
   const foodsCollection = client.db('yoodaHostel').collection('foods');
+  const feedsCollection = client.db('yoodaHostel').collection('feed');
 
   app.post('/addFood', (req, res) => {
     // FoodItem(id, name, price)
@@ -124,23 +125,155 @@ client.connect((err) => {
       });
   });
 
-  app.post('/getFullUserByEmail', (req, res) => {
-    const email = req.body.email;
-    userCollection.find({ email: email }).toArray((err, res) => {
-      if (user && user.length > 0) {
-        res.send(user);
+  app.post('/activeStudentsStatus', async (req, res) => {
+    const { studentsIDList } = req.body;
+
+    userCollection.updateMany(
+      { id: { $in: studentsIDList } },
+      { $set: { status: 'active' } },
+      { multi: true }
+    );
+    return res.send({ success: true });
+  });
+
+  app.post('/inActiveStudentsStatus', async (req, res) => {
+    const { studentsIDList } = req.body;
+
+    userCollection.updateMany(
+      { id: { $in: studentsIDList } },
+      { $set: { status: 'inActive' } },
+      { multi: true }
+    );
+    return res.send({ success: true });
+  });
+
+  app.post('/editStudent', (req, res) => {
+    const id = req.body.id;
+    const fullName = req.body.fullName;
+    const roll = req.body.roll;
+    const age = req.body.age;
+    const _class = req.body.class;
+    const hall = req.body.hall;
+    const status = req.body.status;
+
+    userCollection
+      .updateOne(
+        { id: foodId },
+        {
+          $set: {
+            id,
+            fullName,
+            roll: parseInt(roll),
+            age: parseInt(age),
+            class: parseInt(_class),
+            hall,
+            status,
+          },
+        }
+      )
+      .then((response) => {
+        res.send(response);
+      });
+  });
+
+  app.post('/deleteStudent', (req, res) => {
+    const id = req.body.id;
+    var myQuery = { id: id };
+    userCollection.deleteOne(myQuery, (err, res) => {
+      if (err) {
+        console.log(err);
       } else {
         res.send(res);
       }
     });
   });
 
-  app.post('/deleteSelectedStudents', async (req, res) => {
-    const { haveToDeleteStudentsList } = req.body;
-    await userCollection.deleteMany({
-      id: { $in: haveToDeleteStudentsList },
+  app.post('/getStudents', (req, res) => {
+    let { pageNumber } = req.body;
+
+    var perPage = 10;
+
+    // get records to skip
+    var startFrom = pageNumber * perPage;
+    // get data from mongo DB using pagination
+    userCollection
+      .find({})
+      .skip(startFrom)
+      .limit(perPage)
+      .toArray()
+      .then((response) => {
+        res.send(response);
+      })
+      .catch((err) => console.log(err));
+  });
+
+  app.post('/addServedFood', (req, res) => {
+    // Distribution(id, studentId, date, shift,status, foodItemList)
+
+    const id = req.body.id;
+    const studentId = req.body.studentId;
+    const date = req.body.date;
+    const shift = req.body.shift;
+    const status = req.body.status;
+    const foodItemList = req.body.foodItemList;
+    console.log(req.body);
+    feedsCollection
+      .insertOne({
+        id,
+        studentId,
+        date,
+        shift,
+        status,
+        foodItemList,
+      })
+      .then((result) => {
+        // console.log(result);
+        res.send(result.acknowledged);
+      });
+  });
+
+  app.post('/isServed', (req, res) => {
+    const studentId = req.body.studentId;
+    const date = req.body.date;
+    const shift = req.body.shift;
+    feedsCollection
+      .find({
+        $and: [
+          {
+            studentId: studentId,
+          },
+          {
+            date: date,
+          },
+          {
+            shift: shift,
+          },
+          // {age:{$gt:minAge,$lt:maxAge}}
+        ],
+      })
+      .toArray((err, served) => {
+        if (served && user.served > 0) {
+          res.send(true);
+        } else {
+          res.send(false);
+        }
+      });
+  });
+
+  app.post('/getStudentsByRoll', (req, res) => {
+    const roll = req.body.roll;
+    userCollection.find({ roll: roll }).toArray((err, user) => {
+      if (user && user.length > 0) {
+        res.send(user);
+      } else {
+        console.log(
+          'Student not found, server side error -getStudentsByRoll',
+          user,
+          email,
+          err
+        );
+      }
     });
-    return res.send({ success: true });
   });
 
   console.log('database connected successfully');
