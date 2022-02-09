@@ -59,7 +59,7 @@ client.connect((err) => {
 
     foodsCollection
       .updateOne(
-        { id: foodId },
+        { id: id },
         { $set: { id: id, name: name, price: parseInt(price) } }
       )
       .then((response) => {
