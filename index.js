@@ -70,11 +70,11 @@ client.connect((err) => {
   app.post('/deleteFood', (req, res) => {
     const id = req.body.id;
     var myQuery = { id: id };
-    foodsCollection.deleteOne(myQuery, (err, res) => {
+    foodsCollection.deleteOne(myQuery, (err, response) => {
       if (err) {
         console.log(err);
       } else {
-        res.send(res);
+        res.send(response);
       }
     });
   });
@@ -158,7 +158,7 @@ client.connect((err) => {
 
     userCollection
       .updateOne(
-        { id: foodId },
+        { id: id },
         {
           $set: {
             id,
@@ -179,11 +179,11 @@ client.connect((err) => {
   app.post('/deleteStudent', (req, res) => {
     const id = req.body.id;
     var myQuery = { id: id };
-    userCollection.deleteOne(myQuery, (err, res) => {
+    userCollection.deleteOne(myQuery, (err, response) => {
       if (err) {
         console.log(err);
       } else {
-        res.send(res);
+        res.send(response);
       }
     });
   });
