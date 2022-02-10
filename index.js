@@ -252,7 +252,7 @@ client.connect((err) => {
         ],
       })
       .toArray((err, served) => {
-        if (served && user.served > 0) {
+        if (served && served.length > 0) {
           res.send(true);
         } else {
           res.send(false);
@@ -262,18 +262,23 @@ client.connect((err) => {
 
   app.post('/getStudentsByRoll', (req, res) => {
     const roll = req.body.roll;
-    userCollection.find({ roll: roll }).toArray((err, user) => {
-      if (user && user.length > 0) {
-        res.send(user);
-      } else {
-        console.log(
-          'Student not found, server side error -getStudentsByRoll',
-          user,
-          email,
-          err
-        );
-      }
-    });
+    userCollection
+      .find({ roll: parseInt(roll) })
+      .toArray()
+      .then((response) => {
+        res.send(response);
+      })
+      .catch((err) => console.log(err));
+  });
+
+  app.get('/getFoods', (req, res) => {
+    foodsCollection
+      .find({})
+      .toArray()
+      .then((response) => {
+        res.send(response);
+      })
+      .catch((err) => console.log(err));
   });
 
   console.log('database connected successfully');
